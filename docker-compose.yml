@@ -1,0 +1,14 @@
+services:
+  sentry-error-handler_composer:
+    build:
+      dockerfile: Dockerfile
+      context: .docker/php
+    container_name: sentry-error-handler_composer
+    restart: "no"
+    working_dir: /app
+    volumes:
+      - ./:/app
+networks:
+  default:
+    external: true
+    name: shared-network

@@ -1,0 +1,31 @@
+{
+	"name": "compono-kit/sentry-error-handler",
+	"description": "Error handler implementation of sentry",
+	"minimum-stability": "dev",
+	"prefer-stable": true,
+	"license": "proprietary",
+	"authors": [
+		{
+			"name": "Benjamin Bruska",
+			"email": "benjamin.bruska@your-coder.de"
+		}
+	],
+	"require": {
+		"php": ">=8.1",
+		"compono-kit/error-handlers": "^1.0.0",
+		"compono-kit/sentry-client": "^1.0.0"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "^10.0.0"
+	},
+	"autoload": {
+		"psr-4": {
+			"ComponoKit\\ErrorHandlers\\Sentry\\": "src/"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"ComponoKit\\ErrorHandlers\\Sentry\\Tests\\": "tests/"
+		}
+	}
+}

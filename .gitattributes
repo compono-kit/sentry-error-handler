@@ -1,0 +1,5 @@
+/.docker export-ignore
+/build export-ignore
+/tests export-ignore
+/docker-compose.yml export-ignore
+/DOCKER.md export-ignore
