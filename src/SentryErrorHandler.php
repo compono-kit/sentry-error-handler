@@ -74,15 +74,12 @@ class SentryErrorHandler implements HandlesErrors
 	{
 		$this->guardContextLevels( $context );
 
-		if ( $tags )
-		{
-			$this->sentryClient->useTags( new Tags( iterator_to_array( $this->createTags( $tags ) ) ) );
-		}
-
 		$this->sentryClient->captureMessage(
 			new Message( $message ),
 			$severity,
-			$context ? $this->createContext( $context ) : null
+			$context ? $this->createContext( $context ) : null,
+			null,
+			$tags ? new Tags( iterator_to_array( $this->createTags( $tags ) ) ) : null
 		);
 	}
 
@@ -96,10 +93,35 @@ class SentryErrorHandler implements HandlesErrors
 		foreach ( $tags as $tagTitle => $tagValue )
 		{
 			yield new Tag(
-				new TagTitle( $tagTitle ),
-				new TagValue( $tagValue )
+				new TagTitle( (string)$tagTitle ),
+				new TagValue( $this->convertTagValueToString( $tagValue ) )
 			);
 		}
+	}
+
+	private function convertTagValueToString( mixed $tagValue ): string
+	{
+		if ( is_string( $tagValue ) )
+		{
+			return $tagValue;
+		}
+
+		if ( is_bool( $tagValue ) )
+		{
+			return $tagValue ? 'true' : 'false';
+		}
+
+		if ( $tagValue === null )
+		{
+			return 'null';
+		}
+
+		if ( is_scalar( $tagValue ) || $tagValue instanceof \Stringable )
+		{
+			return (string)$tagValue;
+		}
+
+		return (string)json_encode( $tagValue, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR );
 	}
 
 	private function createContext( array $context ): Context

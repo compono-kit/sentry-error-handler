@@ -188,27 +188,47 @@ class SentryErrorHandlerTest extends TestCase
 		(new SentryErrorHandler($client))->warning('Test warning');
 	}
 
-	public function testWarningWithTagsCallsUseTags(): void
-	{
-		$client = $this->buildSentryClient();
-
-		$client->expects($this->once())
-			->method('useTags')
-			->with($this->isInstanceOf(Tags::class));
-
-		$client->expects($this->once())->method('captureMessage');
-
-		(new SentryErrorHandler($client))->warning('Test warning', [], ['environment' => 'production']);
-	}
-
-	public function testWarningWithoutTagsDoesNotCallUseTags(): void
+	/**
+	 * @dataProvider eventTagsProvider
+	 */
+	public function testTagsArePassedAsEventTagsInsteadOfGlobalTags(array $tags, ?array $expectedEventTags): void
 	{
 		$client = $this->buildSentryClient();
 
 		$client->expects($this->never())->method('useTags');
-		$client->method('captureMessage');
+		$client->expects($this->once())
+			->method('captureMessage')
+			->with(
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				$this->isNull(),
+				$this->callback(fn(?Tags $eventTags) => $eventTags?->toKeyValueArray() === $expectedEventTags)
+			);
 
-		(new SentryErrorHandler($client))->warning('Test warning');
+		(new SentryErrorHandler($client))->warning('Test warning', [], $tags);
+	}
+
+	public static function eventTagsProvider(): array
+	{
+		return [
+			'without tags no event tags are passed'      => [
+				[],
+				null,
+			],
+			'string tags are passed unchanged'           => [
+				['environment' => 'production'],
+				['environment' => 'production'],
+			],
+			'non string tag values are converted'        => [
+				['retry' => 3, 'amount' => 12.5, 'paid' => true, 'shipped' => false, 'customer' => null],
+				['retry' => '3', 'amount' => '12.5', 'paid' => 'true', 'shipped' => 'false', 'customer' => 'null'],
+			],
+			'array tag value is converted to json'       => [
+				['ids' => [1, 2]],
+				['ids' => '[1,2]'],
+			],
+		];
 	}
 
 	public function testContextGroupingWithNamedGroup(): void
